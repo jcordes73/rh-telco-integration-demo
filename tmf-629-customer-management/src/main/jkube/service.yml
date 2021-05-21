@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    expose: true 
+    app: tmf629
+  name: tmf629
+spec:
+  ports:
+  - name: http
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: tmf629
