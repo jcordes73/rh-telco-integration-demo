@@ -39,14 +39,20 @@
             <from id="_from1" uri="direct:retrieveCustomer"/>
             <to id="_to1" uri="direct:loginSugarCrm"/>
             <transform id="_transform1">
-                <groovy>return new com.sugarcrm.sugarcrm.GetEntryRequestType(session: body.return.id, moduleName: "Accounts", id: request.headers['id'], selectFields: new com.sugarcrm.sugarcrm.SelectFields[0])</groovy>
+                <groovy>
+                	return new com.sugarcrm.sugarcrm.GetEntryRequestType(
+                		session: body.return.id,
+                		moduleName: "Accounts",
+                		id: request.headers['id'],
+                		selectFields: new com.sugarcrm.sugarcrm.SelectFields[0]
+                	)
+                </groovy>
             </transform>
             <marshal id="_marshal1" ref="jaxb"/>
             <setHeader headerName="operationName" id="_setHeader1">
                 <constant>get_entry</constant>
             </setHeader>
             <to id="_to2" uri="cxf:bean:soapEndpoint"/>
-            <!-- unmarshal id="_unmarshal1" ref="jaxb"/> -->
             <convertBodyTo id="_convertBodyTo1" type="String"/>
             <transform id="_transform3">
                 <groovy>
@@ -74,6 +80,54 @@
             <marshal id="_marshal3" ref="jackson"/>
             <removeHeaders id="_removeHeaders1" pattern="*"/>
         </route>
+        <route id="createCustomerDirect">
+            <from id="_from3" uri="direct:createCustomer"/>
+            <unmarshal id="_unmarshal1" ref="jackson"/>
+            <setProperty id="_setProperty1" propertyName="customer">
+                <simple>${body}</simple>
+            </setProperty>
+            <to id="_to3" uri="direct:loginSugarCrm"/>
+            <setProperty id="_setProperty2" propertyName="sessionId">
+                <simple>${body.return.id}</simple>
+            </setProperty>
+            <transform id="_transform4">
+                <groovy>
+                    def customer = exchange.properties['customer'];
+                	def nameValueList = new com.sugarcrm.sugarcrm.NameValueList();
+                	
+                	nameValueList.arrayType = "tns:name_value[5]";
+                	
+                	nameValueList.getAny().add(new javax.xml.bind.JAXBElement&lt;com.sugarcrm.sugarcrm.NameValue&gt;(new javax.xml.namespace.QName("name_value"), com.sugarcrm.sugarcrm.NameValue.class, new com.sugarcrm.sugarcrm.NameValue(name: 'name', value: customer.name)));
+                	nameValueList.getAny().add(new javax.xml.bind.JAXBElement&lt;com.sugarcrm.sugarcrm.NameValue&gt;(new javax.xml.namespace.QName("name_value"), com.sugarcrm.sugarcrm.NameValue.class, new com.sugarcrm.sugarcrm.NameValue(name: 'billing_address_street', value: customer.contactMedium[0].characteristic.street1)));
+                	nameValueList.getAny().add(new javax.xml.bind.JAXBElement&lt;com.sugarcrm.sugarcrm.NameValue&gt;(new javax.xml.namespace.QName("name_value"), com.sugarcrm.sugarcrm.NameValue.class, new com.sugarcrm.sugarcrm.NameValue(name: 'billing_address_postalcode', value: customer.contactMedium[0].characteristic.postCode)));
+                	nameValueList.getAny().add(new javax.xml.bind.JAXBElement&lt;com.sugarcrm.sugarcrm.NameValue&gt;(new javax.xml.namespace.QName("name_value"), com.sugarcrm.sugarcrm.NameValue.class, new com.sugarcrm.sugarcrm.NameValue(name: 'billing_address_city', value: customer.contactMedium[0].characteristic.city)));
+                	nameValueList.getAny().add(new javax.xml.bind.JAXBElement&lt;com.sugarcrm.sugarcrm.NameValue&gt;(new javax.xml.namespace.QName("name_value"), com.sugarcrm.sugarcrm.NameValue.class, new com.sugarcrm.sugarcrm.NameValue(name: 'billing_address_country', value: customer.contactMedium[0].characteristic.country)));
+                	                	
+                	return new com.sugarcrm.sugarcrm.SetEntryRequestType(
+                		session: exchange.properties['sessionId'],
+                		moduleName: "Accounts",
+                		nameValueList: nameValueList
+                	)
+                </groovy>
+            </transform>
+            <marshal id="_marshal2" ref="jaxb"/>
+            <setHeader headerName="operationName" id="_setHeader3">
+                <constant>set_entry</constant>
+            </setHeader>
+            <to id="_to4" uri="cxf:bean:soapEndpoint"/>
+            <convertBodyTo id="_convertBodyTo2" type="String"/>
+            <transform id="_transform5">
+                <groovy>
+					def id = new XmlSlurper().parseText(body).return.id;
+					  
+					return new com.tmf.cim.customer.Customer(
+						id: id,
+					)
+				</groovy>
+            </transform>
+            <marshal id="_marshal4" ref="jackson"/>
+            <removeHeaders id="_removeHeaders2" pattern="*"/>
+        </route>
         <route id="loginSugarCrm">
             <from id="_from2" uri="direct:loginSugarCrm"/>
             <transform id="_transform2">
@@ -85,11 +139,11 @@
 					)
 				</groovy>
             </transform>
-            <marshal id="_marshal2" ref="jaxb"/>
+            <marshal id="_marshal5" ref="jaxb"/>
             <setHeader headerName="operationName" id="_setHeader2">
                 <constant>login</constant>
             </setHeader>
-            <to id="_to3" uri="cxf:bean:soapEndpoint"/>
+            <to id="_to5" uri="cxf:bean:soapEndpoint"/>
             <unmarshal id="_unmarshal2" ref="jaxb"/>
         </route>
     </camelContext>
