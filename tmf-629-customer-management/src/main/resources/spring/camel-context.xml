@@ -128,6 +128,41 @@
             <marshal id="_marshal4" ref="jackson"/>
             <removeHeaders id="_removeHeaders2" pattern="*"/>
         </route>
+		<route id="deleteCustomerDirect">
+            <from uri="direct:deleteCustomer"/>
+            <to uri="direct:loginSugarCrm"/>
+            <transform>
+                <groovy>
+                	def nameValueList = new com.sugarcrm.sugarcrm.NameValueList();
+                	
+                	nameValueList.arrayType = "tns:name_value[2]";
+                	
+nameValueList.getAny().add(new javax.xml.bind.JAXBElement&lt;com.sugarcrm.sugarcrm.NameValue&gt;(new javax.xml.namespace.QName("name_value"), com.sugarcrm.sugarcrm.NameValue.class, new com.sugarcrm.sugarcrm.NameValue(name: 'id', value: request.headers['id'])));
+                	nameValueList.getAny().add(new javax.xml.bind.JAXBElement&lt;com.sugarcrm.sugarcrm.NameValue&gt;(new javax.xml.namespace.QName("name_value"), com.sugarcrm.sugarcrm.NameValue.class, new com.sugarcrm.sugarcrm.NameValue(name: 'deleted', value: 1)));
+
+                	return new com.sugarcrm.sugarcrm.SetEntryRequestType(
+                		session: body.return.id,
+                		moduleName: "Accounts",
+                		nameValueList: nameValueList
+                	)
+                </groovy>
+            </transform>
+            <marshal ref="jaxb"/>
+            <setHeader headerName="operationName">
+                <constant>set_entry</constant>
+            </setHeader>
+            <to uri="cxf:bean:soapEndpoint"/>
+            <convertBodyTo type="String"/>
+            <transform >
+                <groovy>
+					return new com.tmf.cim.customer.Customer(
+						id: request.headers['id'],
+					)
+				</groovy>
+            </transform>
+            <marshal ref="jackson"/>
+            <removeHeaders pattern="*"/>
+        </route>
         <route id="loginSugarCrm">
             <from id="_from2" uri="direct:loginSugarCrm"/>
             <transform id="_transform2">
